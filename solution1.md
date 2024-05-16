@@ -45,3 +45,34 @@
 
     }
     ```
+
+	```
+	func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	timer := time.NewTimer(time.Duration(5 * time.Second))
+
+	var wg sync.WaitGroup
+	arr := [3]string{"a", "b", "c"}
+
+	for _, v := range arr {
+		wg.Add(1)
+		go func(ctx context.Context) {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				fmt.Println(fmt.Sprintf("call %s done", v))
+				timer.Stop()
+				timer.Reset(5 * time.Second)
+				return
+			case <-timer.C:
+				time.Sleep(50 * time.Second)
+				fmt.Println(v)
+				fmt.Println("timeout")
+			}
+		}(ctx)
+	}
+	wg.Wait()
+}
+
+	```
